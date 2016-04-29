@@ -1,0 +1,42 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.8
+version = '1.0'
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Quickstart',
+                   'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2'
+    compile 'org.jsoup:jsoup:1.9.1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.7.3'
+    compile 'org.slf4j:jcl-over-slf4j:1.7.12'
+	compile 'ch.qos.logback:logback-classic:1.1.3'
+	compile 'com.google.guava:guava:19.0'
+	
+	//NLP based date parser to extract dates from any text
+	compile 'org.ocpsoft.prettytime:prettytime-nlp:4.0.0.Final'
+	
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}

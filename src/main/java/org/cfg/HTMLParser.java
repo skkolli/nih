@@ -72,7 +72,7 @@ public class HTMLParser {
 		});
 		
 		String json = mapper.writeValueAsString(jsonContainer);
-//		logger.info("JSON: ===> {}", json);
+		logger.info("JSON: ===> {}", json);
 	}
 	
 	private static void processKVRow(Element label, Element value, Map<String, Object> jsonContainer) {

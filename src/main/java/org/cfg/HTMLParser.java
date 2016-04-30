@@ -3,6 +3,10 @@
  */
 package org.cfg;
 
+import java.io.BufferedWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,19 +46,33 @@ public class HTMLParser
 		DateFormat df = new SimpleDateFormat("yyyyMMdd");
 		mapper.setDateFormat(df);
 
-		// List<String> urls = grabAllUrls();
+		// List<String> urls = Lists.newArrayList("http://grants.nih.gov/grants/guide/pa-files/PA-16-206.html");
+		// List<String> urls = Lists.newArrayList("http://grants.nih.gov//grants/guide/pa-files/PAR-16-195.html");
+		List<String> urls = grabAllUrls();
 
-		// for (String url: urls) {
-		// System.out.println(url);
-		// processURL(url);
-		// System.out.println("---------------------------------------");
-		// }
-
-		processURL("http://grants.nih.gov/grants/guide/pa-files/PA-16-206.html");
+		Path outputPath = Paths.get("./nih-data.json");
+		try (BufferedWriter writer = Files.newBufferedWriter(outputPath))
+			{
+			for (String url : urls)
+				{
+				logger.info("Processing url: {}", url);
+				DocTupple doc = processURL(url);
+				logger.info("JSON: ===> \n{}", doc.json);
+				writer.write("{\"index\" : { ");
+				writer.write(String.format("\"%s\" : \"%s\" ", "_index", "nih"));
+				writer.write(String.format(", \"%s\" : \"%s\" ", "_type", "grant"));
+				writer.write(String.format(", \"%s\" : \"%s\" ", "_id", doc.id));		
+				writer.write(" } }");
+				writer.newLine();
+				writer.write(doc.json);
+				writer.newLine();
+				}
+			}
+		logger.info("Output written to: {}", outputPath);
 
 		}
 
-	private static void processURL(String url) throws Exception
+	private static DocTupple processURL(String url) throws Exception
 		{
 		Map<String, Object> jsonContainer = new HashMap<>();
 		Document doc = Jsoup.connect(url).get();
@@ -69,14 +87,25 @@ public class HTMLParser
 		Element value = r.select(".datacolumn").first();
 
 		if (label != null && value != null)
-			{
 			processKVRow(label, value, jsonContainer);
-			}
 
 		});
 
+		String id = jsonContainer.get("announcement_number").toString();
 		String json = mapper.writeValueAsString(jsonContainer);
-		logger.info("JSON: ===> \n{}", json);
+		return new DocTupple(id, json);
+		}
+
+	static class DocTupple
+		{
+		String id;
+		String json;
+
+		public DocTupple(String id, String json)
+			{
+			this.id = id;
+			this.json = json;
+			}
 		}
 
 	private static void processKVRow(Element label, Element value, Map<String, Object> jsonContainer)
@@ -95,16 +124,16 @@ public class HTMLParser
 		String key = label.text().trim().replace("\u00a0", "");
 
 		List<String> tokens = Lists.newArrayList(Splitter.on("\u0001").omitEmptyStrings().trimResults()
-				.split(value.text()));
+				.split(cleanString(value.text())));
 		if (tokens.size() == 1)
 			{
 			// jsonContainer.put(key, tokens.get(0));
-			logger.info("Intentionally not adding field: {}", key);
+			logger.debug("Intentionally not adding field: {}", key);
 			}
 		else
 			{
 			// jsonContainer.put(key, tokens);
-			logger.info("Intentionally not adding field: {}", key);
+			logger.debug("Intentionally not adding field: {}", key);
 			}
 
 		if (key.equals("Components of Participating Organizations"))
@@ -132,7 +161,12 @@ public class HTMLParser
 			processActivityCodes(value, jsonContainer, "activity_code");
 			}
 
-		if (key.equals("Announcement Type"))
+		// if (key.equals("Announcement Type"))
+		// {
+		// processAnnouncementNumber(value, jsonContainer, "announcement_number");
+		// }
+
+		if (key.equals("Funding Opportunity Announcement (FOA) Number"))
 			{
 			processAnnouncementNumber(value, jsonContainer, "announcement_number");
 			}
@@ -168,65 +202,63 @@ public class HTMLParser
 
 	private static void processCPOs(Element e, Map<String, Object> jsonContainer, String newFieldLabel)
 		{
-		List<String> tokens = e.select("a").stream().map(ea -> ea.text()).collect(Collectors.toList());
+		List<String> tokens = e.select("a").stream().map(ea -> cleanString(ea.text())).collect(Collectors.toList());
 		if (tokens.size() > 0)
 			{
 			jsonContainer.put(newFieldLabel, tokens);
 			}
 		}
 
-	private static void processActivityCodes(Element e, Map<String, Object> jsonContainer,
-			String newFieldLabel)
+	private static void processActivityCodes(Element e, Map<String, Object> jsonContainer, String newFieldLabel)
 		{
-		List<String> tokens = e.select("a").stream().map(ea -> ea.text()).collect(Collectors.toList());
+		List<String> tokens = e.select("a").stream().map(ea -> cleanString(ea.text())).collect(Collectors.toList());
 		if (tokens.size() > 0)
 			{
 			jsonContainer.put(newFieldLabel, tokens);
 			}
 		}
 
-	private static void processTitle(Element e, Map<String, Object> jsonContainer,
-			String newFieldLabel)
+	private static void processTitle(Element e, Map<String, Object> jsonContainer, String newFieldLabel)
 		{
-		jsonContainer.put(newFieldLabel, e.text());
+		jsonContainer.put(newFieldLabel, cleanString(e.text()));
 		}
 
-	private static void processAnnouncementNumber(Element e, Map<String, Object> jsonContainer,
-			String newFieldLabel)
+	private static void processAnnouncementNumber(Element e, Map<String, Object> jsonContainer, String newFieldLabel)
 		{
-		List<String> tokens = e.select("a").stream().map(ea -> ea.text()).collect(Collectors.toList());
-		if (tokens.size() > 0)
-			{
-			tokens.stream().forEach(tok -> {
-			if (StringUtils.startsWith(tok, "PA-"))
-				jsonContainer.put("is_pa", true);
-			if (StringUtils.startsWith(tok, "PAR-"))
-				{
-				jsonContainer.put("is_pa", true);
-				jsonContainer.put("is_par", true);
-				}
-			if (StringUtils.startsWith(tok, "PAS-"))
-				{
-				jsonContainer.put("is_pa", true);
-				jsonContainer.put("is_pas", true);
-				}
-			if (StringUtils.startsWith(tok, "RFA-"))
-				jsonContainer.put("is_rfa", true);
-			});
+		String text = cleanString(e.text());
 
-			jsonContainer.put(newFieldLabel, tokens);
+		if (StringUtils.startsWith(text, "PA-"))
+			jsonContainer.put("is_pa", true);
+		if (StringUtils.startsWith(text, "PAR-"))
+			{
+			jsonContainer.put("is_pa", true);
+			jsonContainer.put("is_par", true);
 			}
+		if (StringUtils.startsWith(text, "PAS-"))
+			{
+			jsonContainer.put("is_pa", true);
+			jsonContainer.put("is_pas", true);
+			}
+		if (StringUtils.startsWith(text, "RFA-"))
+			jsonContainer.put("is_rfa", true);
+
+		jsonContainer.put(newFieldLabel, text);
 		}
 
 	private static void processCDFAs(Element e, Map<String, Object> jsonContainer)
 		{
 		List<String> tokens = Lists.newArrayList(Splitter.on(";").omitEmptyStrings().trimResults()
-				.split(e.text()));
+				.split(cleanString(e.text())));
 
 		if (tokens.size() > 0)
 			{
 			jsonContainer.put("cfdas_cds", tokens);
 			}
+		}
+
+	private static String cleanString(String input)
+		{
+		return input.replaceAll("(\\r|\\n|\\u00a0)", "").trim();
 		}
 
 	private static List<String> grabAllUrls() throws Exception

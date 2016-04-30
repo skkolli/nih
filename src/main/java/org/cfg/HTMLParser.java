@@ -61,7 +61,7 @@ public class HTMLParser
 				writer.write("{\"index\" : { ");
 				writer.write(String.format("\"%s\" : \"%s\" ", "_index", "nih"));
 				writer.write(String.format(", \"%s\" : \"%s\" ", "_type", "grant"));
-				writer.write(String.format(", \"%s\" : \"%s\" ", "_id", doc.id));		
+				writer.write(String.format(", \"%s\" : \"%s\" ", "_id", doc.id));
 				writer.write(" } }");
 				writer.newLine();
 				writer.write(doc.json);
@@ -153,7 +153,7 @@ public class HTMLParser
 
 		if (key.equals("Funding Opportunity Title"))
 			{
-			processTitle(value, jsonContainer, "title");
+			processSimpleText(value, jsonContainer, "title");
 			}
 
 		if (key.equals("Activity Code"))
@@ -171,30 +171,49 @@ public class HTMLParser
 			processAnnouncementNumber(value, jsonContainer, "announcement_number");
 			}
 
-		if (key.toLowerCase().endsWith(" date"))
+		if (key.equals("Funding Opportunity Purpose"))
 			{
-			String lowerKey = key.toLowerCase();
-			String newKey = lowerKey.replaceAll(" ", "_");
+			processSimpleText(value, jsonContainer, "summary");
+			}
+
+		if (key.equals("Posted Date"))
+			{
 			List<Date> d = extractDates(value.text());
 			if (d != null && !d.isEmpty())
 				{
-				jsonContainer.put(newKey, d.get(0));
+				jsonContainer.put("posted_date", d.get(0));
 				}
-
-			System.out.println("----");
-
 			}
 
-		// if (key.toLowerCase().contains(" date(s)")) {
+		if (key.equals("Expiration Date"))
+			{
+			List<Date> d = extractDates(value.text());
+			if (d != null && !d.isEmpty())
+				{
+				jsonContainer.put("expiration_date", d.get(0));
+				}
+			}
+
+		if (key.equals("Open Date (Earliest Submission Date)"))
+			{
+			List<Date> d = extractDates(value.text());
+			if (d != null && !d.isEmpty())
+				{
+				jsonContainer.put("open_date", d.get(0));
+				}
+			}
+
+		// if (key.toLowerCase().endsWith(" date"))
+		// {
 		// String lowerKey = key.toLowerCase();
-		// System.out.println(lowerKey);
-		// String newKey = lowerKey.substring(0, lowerKey.indexOf(" date(s)") +
-		// 5).replaceAll("[()]", "").replaceAll(" ", "_");
-		// System.out.println(newKey);
+		// String newKey = lowerKey.replaceAll(" ", "_");
 		// List<Date> d = extractDates(value.text());
-		// if (d != null && !d.isEmpty()) {
-		// jsonContainer.put(newKey, d);
+		// if (d != null && !d.isEmpty())
+		// {
+		// jsonContainer.put(newKey, d.get(0));
 		// }
+		//
+		// System.out.println("----");
 		//
 		// }
 
@@ -218,7 +237,7 @@ public class HTMLParser
 			}
 		}
 
-	private static void processTitle(Element e, Map<String, Object> jsonContainer, String newFieldLabel)
+	private static void processSimpleText(Element e, Map<String, Object> jsonContainer, String newFieldLabel)
 		{
 		jsonContainer.put(newFieldLabel, cleanString(e.text()));
 		}
@@ -227,20 +246,20 @@ public class HTMLParser
 		{
 		String text = cleanString(e.text());
 
+		List<String> grantTypes = new ArrayList<>();
 		if (StringUtils.startsWith(text, "PA-"))
-			jsonContainer.put("is_pa", true);
+			grantTypes.add("PA");
 		if (StringUtils.startsWith(text, "PAR-"))
-			{
-			jsonContainer.put("is_pa", true);
-			jsonContainer.put("is_par", true);
-			}
+			grantTypes.add("PAR");
 		if (StringUtils.startsWith(text, "PAS-"))
-			{
-			jsonContainer.put("is_pa", true);
-			jsonContainer.put("is_pas", true);
-			}
+			grantTypes.add("PAS");
 		if (StringUtils.startsWith(text, "RFA-"))
-			jsonContainer.put("is_rfa", true);
+			grantTypes.add("RFA");
+		if (StringUtils.startsWith(text, "NOT-"))
+			grantTypes.add("NOT");
+
+		if (!grantTypes.isEmpty())
+			jsonContainer.put("grant_types", grantTypes);
 
 		jsonContainer.put(newFieldLabel, text);
 		}

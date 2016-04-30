@@ -11,18 +11,26 @@
       "properties": {
         "announcement_number": {
           "type": "string",
-          "index": "not_analyzed"
+          "index": "not_analyzed",
+          "include_in_all": false
         },
         "issuing_org": {
           "type": "string",
-          "index": "not_analyzed"
+          "index": "not_analyzed",
+          "include_in_all": false
         },
         "activity_code": {
           "type": "string",
-          "index": "not_analyzed"
+          "index": "not_analyzed",
+          "include_in_all": false
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "include_in_all": false
+        },
+        "summary": {
+          "type": "string",
+          "include_in_all": false
         },
         "posted_date": {
           "type": "date"
@@ -30,33 +38,23 @@
         "expiration_date": {
           "type": "date"
         },
-        "is_pa": {
-          "type": "boolean",
-          "include_in_all": false
+        "open_date": {
+          "type": "date"
         },
-        "is_par": {
-          "type": "boolean",
-          "include_in_all": false
-        },
-        "is_pas": {
-          "type": "boolean",
-          "include_in_all": false
-        },
-        "is_rfa": {
-          "type": "boolean",
-          "include_in_all": false
-        },
-        "is_not": {
-          "type": "boolean",
+        "grant_type": {
+          "type": "string",
+          "index": "not_analyzed",
           "include_in_all": false
         },
         "cfdas_cds": {
           "type": "string",
-          "index": "not_analyzed"
+          "index": "not_analyzed",
+          "include_in_all": false
         },
         "cpo_cds": {
           "type": "string",
-          "index": "not_analyzed"
+          "index": "not_analyzed",
+          "include_in_all": false
         },
         "raw_text": {
           "type": "string"

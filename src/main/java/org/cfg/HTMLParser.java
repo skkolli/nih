@@ -140,9 +140,7 @@ public class HTMLParser
 		if (key.toLowerCase().endsWith(" date"))
 			{
 			String lowerKey = key.toLowerCase();
-			System.out.println(lowerKey);
 			String newKey = lowerKey.replaceAll(" ", "_");
-			System.out.println(newKey);
 			List<Date> d = extractDates(value.text());
 			if (d != null && !d.isEmpty())
 				{

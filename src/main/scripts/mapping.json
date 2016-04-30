@@ -1,0 +1,67 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "grant": {
+      "_all": {
+        "enabled": true
+      },
+      "properties": {
+        "announcement_number": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "issuing_org": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "activity_code": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "title": {
+          "type": "string"
+        },
+        "posted_date": {
+          "type": "date"
+        },
+        "expiration_date": {
+          "type": "date"
+        },
+        "is_pa": {
+          "type": "boolean",
+          "include_in_all": false
+        },
+        "is_par": {
+          "type": "boolean",
+          "include_in_all": false
+        },
+        "is_pas": {
+          "type": "boolean",
+          "include_in_all": false
+        },
+        "is_rfa": {
+          "type": "boolean",
+          "include_in_all": false
+        },
+        "is_not": {
+          "type": "boolean",
+          "include_in_all": false
+        },
+        "cfdas_cds": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "cpo_cds": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "raw_text": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -69,7 +69,7 @@ public class HTMLParser
 				}
 			}
 		logger.info("Output written to: {}", outputPath);
-
+		logger.info("Index output with the following command: \n\tcurl -XPOST localhost:9200/_bulk --data-binary @nih-data.json");
 		}
 
 	private static DocTupple processURL(String url) throws Exception

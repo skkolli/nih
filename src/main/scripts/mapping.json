@@ -26,11 +26,13 @@
         },
         "title": {
           "type": "string",
-          "include_in_all": false
+          "include_in_all": false,
+          "term_vector" : "with_positions_offsets" 
         },
         "summary": {
           "type": "string",
-          "include_in_all": false
+          "include_in_all": false,
+          "term_vector" : "with_positions_offsets" 
         },
         "posted_date": {
           "type": "date"
@@ -57,7 +59,8 @@
           "include_in_all": false
         },
         "raw_text": {
-          "type": "string"
+          "type": "string",
+          "term_vector" : "with_positions_offsets" 
         }
       }
     }
